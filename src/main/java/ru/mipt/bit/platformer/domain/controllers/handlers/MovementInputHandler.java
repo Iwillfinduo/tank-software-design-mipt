@@ -28,8 +28,4 @@ public class MovementInputHandler implements InputHandler<Direction> {
 
         return null;
     }
-
-    public Direction getDirection() {
-       return this.handle();
-    }
 }
