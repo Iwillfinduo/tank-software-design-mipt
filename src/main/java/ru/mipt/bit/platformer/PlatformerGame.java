@@ -9,7 +9,7 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Interpolation;
-import ru.mipt.bit.platformer.domain.controllers.InputController;
+import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
 import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
@@ -45,12 +45,12 @@ public class PlatformerGame implements ApplicationListener {
 
         world = new GameWorld();
 
-        InputController inputController = new InputController();
+        MovementInputHandler movementInputHandler = new MovementInputHandler();
 
         playerController = new PlayerController(
                 world.getPlayer(),
                 world.getObstacles(),
-                inputController
+                movementInputHandler
         );
 
         PlayerRenderer playerRenderer =

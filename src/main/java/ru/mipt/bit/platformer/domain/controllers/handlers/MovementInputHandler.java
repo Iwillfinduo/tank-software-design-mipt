@@ -1,10 +1,15 @@
-package ru.mipt.bit.platformer.domain.controllers;
+package ru.mipt.bit.platformer.domain.controllers.handlers;
 
 import com.badlogic.gdx.Gdx;
+import ru.mipt.bit.platformer.util.Direction;
+
 import static com.badlogic.gdx.Input.Keys.*;
 
-public class InputController {
-    public Direction getDirection() {
+public class MovementInputHandler implements InputHandler<Direction> {
+
+
+   @Override
+    public Direction handle() {
         if (Gdx.input.isKeyPressed(UP) || Gdx.input.isKeyPressed(W)) {
             return Direction.UP;
         }

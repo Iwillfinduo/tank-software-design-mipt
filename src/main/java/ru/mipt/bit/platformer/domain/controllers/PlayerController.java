@@ -1,8 +1,10 @@
 package ru.mipt.bit.platformer.domain.controllers;
 
 import com.badlogic.gdx.math.GridPoint2;
+import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.entities.Obstacle;
 import ru.mipt.bit.platformer.domain.entities.Player;
+import ru.mipt.bit.platformer.util.Direction;
 
 import java.util.List;
 
@@ -15,21 +17,21 @@ public class PlayerController implements Controller {
 
     private final Player player;
     private final List<Obstacle> obstacles;
-    private final InputController inputController;
+    private final InputHandler<Direction> directionInputHandler;
 
     public PlayerController(
             Player player,
             List<Obstacle> obstacles,
-            InputController inputController
+            InputHandler<Direction> directionInputHandler
     ) {
         this.player = player;
         this.obstacles = obstacles;
-        this.inputController = inputController;
+        this.directionInputHandler = directionInputHandler;
     }
 
     @Override
     public void update(float deltaTime) {
-        Direction direction = inputController.getDirection();
+        Direction direction = directionInputHandler.handle();
 
         if (!player.isMoving() && direction != null) {
             startMovement(direction);
