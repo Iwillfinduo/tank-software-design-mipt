@@ -25,7 +25,8 @@ public class PlayerControllerTest {
                 new PlayerController(
                         player,
                         new ArrayList<>(),
-                        inputHandler
+                        inputHandler,
+                        0.4f
                 );
 
         controller.update(0f);
@@ -55,7 +56,8 @@ public class PlayerControllerTest {
                 new PlayerController(
                         player,
                         new ArrayList<>(),
-                        inputHandler
+                        inputHandler,
+                        0.4f
                 );
 
         controller.update(0f);
@@ -82,7 +84,8 @@ public class PlayerControllerTest {
                 new PlayerController(
                         player,
                         List.of(obstacle),
-                        inputHandler
+                        inputHandler,
+                        0.4f
                 );
 
         controller.update(0f);
@@ -106,7 +109,8 @@ public class PlayerControllerTest {
                 new PlayerController(
                         player,
                         new ArrayList<>(),
-                        inputHandler
+                        inputHandler,
+                        0.4f
                 );
 
         controller.update(0f);
@@ -134,7 +138,8 @@ public class PlayerControllerTest {
                 new PlayerController(
                         player,
                         new ArrayList<>(),
-                        inputHandler
+                        inputHandler,
+                        0.4f
                 );
 
         controller.update(0f);
