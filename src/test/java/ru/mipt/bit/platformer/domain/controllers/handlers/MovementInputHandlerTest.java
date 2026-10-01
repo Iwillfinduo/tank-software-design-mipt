@@ -6,7 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
 import ru.mipt.bit.platformer.util.Direction;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -17,21 +20,30 @@ public class MovementInputHandlerTest {
     private Input input;
 
     private AutoCloseable mocks;
+    private KeyInput gdxKeyInput;
+    private StandartMovementKeyBindings bindings;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
         Gdx.input = input;
+        gdxKeyInput = new GdxKeyInput();
+        bindings = new StandartMovementKeyBindings(
+                Set.of(Input.Keys.UP, Input.Keys.W),
+                Set.of(Input.Keys.LEFT, Input.Keys.A),
+                Set.of(Input.Keys.DOWN, Input.Keys.S),
+                Set.of(Input.Keys.RIGHT, Input.Keys.D)
+        );
     }
 
 
 
     @Test
     public void detectsUp() {
-        when(input.isKeyPressed(Input.Keys.W)).thenReturn(true);
+        when(input.isKeyPressed(Input.Keys.UP)).thenReturn(true);
 
         MovementInputHandler handler =
-                new MovementInputHandler();
+                new MovementInputHandler(gdxKeyInput, bindings);
 
         assertEquals(
                 Direction.UP,
@@ -41,10 +53,10 @@ public class MovementInputHandlerTest {
 
     @Test
     public void detectsLeft() {
-        when(input.isKeyPressed(Input.Keys.A)).thenReturn(true);
+        when(input.isKeyPressed(Input.Keys.LEFT)).thenReturn(true);
 
         MovementInputHandler handler =
-                new MovementInputHandler();
+                new MovementInputHandler(gdxKeyInput, bindings);
 
         assertEquals(
                 Direction.LEFT,
@@ -54,10 +66,10 @@ public class MovementInputHandlerTest {
 
     @Test
     public void detectsDown() {
-        when(input.isKeyPressed(Input.Keys.S)).thenReturn(true);
+        when(input.isKeyPressed(Input.Keys.DOWN)).thenReturn(true);
 
         MovementInputHandler handler =
-                new MovementInputHandler();
+                new MovementInputHandler(gdxKeyInput, bindings);
 
         assertEquals(
                 Direction.DOWN,
@@ -67,10 +79,10 @@ public class MovementInputHandlerTest {
 
     @Test
     public void detectsRight() {
-        when(input.isKeyPressed(Input.Keys.D)).thenReturn(true);
+        when(input.isKeyPressed(Input.Keys.RIGHT)).thenReturn(true);
 
         MovementInputHandler handler =
-                new MovementInputHandler();
+                new MovementInputHandler(gdxKeyInput, bindings);
 
         assertEquals(
                 Direction.RIGHT,
@@ -81,7 +93,7 @@ public class MovementInputHandlerTest {
     @Test
     public void returnsNullWhenNoKeyPressed() {
         MovementInputHandler handler =
-                new MovementInputHandler();
+                new MovementInputHandler(gdxKeyInput, bindings);
 
         assertNull(handler.handle());
     }

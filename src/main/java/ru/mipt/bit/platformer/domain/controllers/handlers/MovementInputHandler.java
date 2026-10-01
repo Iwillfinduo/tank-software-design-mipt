@@ -1,31 +1,44 @@
 package ru.mipt.bit.platformer.domain.controllers.handlers;
 
-import com.badlogic.gdx.Gdx;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
 import ru.mipt.bit.platformer.util.Direction;
 
-import static com.badlogic.gdx.Input.Keys.*;
+import java.util.Set;
 
 public class MovementInputHandler implements InputHandler<Direction> {
 
+    private final KeyInput keyInput;
+    private final StandartMovementKeyBindings bindings;
 
-   @Override
+    public MovementInputHandler(
+            KeyInput keyInput,
+            StandartMovementKeyBindings bindings
+    ) {
+        this.keyInput = keyInput;
+        this.bindings = bindings;
+    }
+    @Override
     public Direction handle() {
-        if (Gdx.input.isKeyPressed(UP) || Gdx.input.isKeyPressed(W)) {
+        if (anyPressed(bindings.getUpKeys())) {
             return Direction.UP;
         }
 
-        if (Gdx.input.isKeyPressed(LEFT) || Gdx.input.isKeyPressed(A)) {
+        if (anyPressed(bindings.getLeftKeys())) {
             return Direction.LEFT;
         }
 
-        if (Gdx.input.isKeyPressed(DOWN) || Gdx.input.isKeyPressed(S)) {
+        if (anyPressed(bindings.getDownKeys())) {
             return Direction.DOWN;
         }
 
-        if (Gdx.input.isKeyPressed(RIGHT) || Gdx.input.isKeyPressed(D)) {
+        if (anyPressed(bindings.getRightKeys())) {
             return Direction.RIGHT;
         }
 
         return null;
+    }
+
+    private boolean anyPressed(Set<Integer> keys) {
+        return keys.stream().anyMatch(keyInput::isPressed);
     }
 }

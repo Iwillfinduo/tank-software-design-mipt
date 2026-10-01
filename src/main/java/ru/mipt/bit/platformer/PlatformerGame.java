@@ -2,6 +2,7 @@ package ru.mipt.bit.platformer;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.MapRenderer;
@@ -9,14 +10,21 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.math.Interpolation;
+import ru.mipt.bit.platformer.domain.controllers.handlers.GdxKeyInput;
+import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
+import ru.mipt.bit.platformer.domain.controllers.handlers.KeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
 import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
+import ru.mipt.bit.platformer.util.Direction;
 import ru.mipt.bit.platformer.util.TileMovement;
 
+
+import java.util.Set;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
@@ -45,13 +53,26 @@ public class PlatformerGame implements ApplicationListener {
 
         world = new GameWorld();
 
-        MovementInputHandler movementInputHandler = new MovementInputHandler();
-
-        playerController = new PlayerController(
-                world.getPlayer(),
-                world.getObstacles(),
-                movementInputHandler
+        // Ох, сюда бы спринг или другой DI фреймворк
+        StandartMovementKeyBindings bindings = new StandartMovementKeyBindings(
+                Set.of(Input.Keys.UP, Input.Keys.W),
+                Set.of(Input.Keys.LEFT, Input.Keys.A),
+                Set.of(Input.Keys.DOWN, Input.Keys.S),
+                Set.of(Input.Keys.RIGHT, Input.Keys.D)
         );
+
+        KeyInput keyInput = new GdxKeyInput();
+
+        InputHandler<Direction> movementInputHandler =
+                new MovementInputHandler(keyInput, bindings);
+
+        playerController =
+                new PlayerController(
+                        world.getPlayer(),
+                        world.getObstacles(),
+                        movementInputHandler,
+                        0.4f
+                );
 
         PlayerRenderer playerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);

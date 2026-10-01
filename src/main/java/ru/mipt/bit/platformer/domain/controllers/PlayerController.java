@@ -13,25 +13,26 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 public class PlayerController implements Controller {
 
-    private static final float MOVEMENT_SPEED = 0.4f;
-
     private final Player player;
     private final List<Obstacle> obstacles;
-    private final InputHandler<Direction> directionInputHandler;
+    private final InputHandler<Direction> inputHandler;
+    private final float movementSpeed;
 
     public PlayerController(
             Player player,
             List<Obstacle> obstacles,
-            InputHandler<Direction> directionInputHandler
+            InputHandler<Direction> inputHandler,
+            float movementSpeed
     ) {
         this.player = player;
         this.obstacles = obstacles;
-        this.directionInputHandler = directionInputHandler;
+        this.inputHandler = inputHandler;
+        this.movementSpeed = movementSpeed;
     }
 
     @Override
     public void update(float deltaTime) {
-        Direction direction = directionInputHandler.handle();
+        Direction direction = inputHandler.handle();
 
         if (!player.isMoving() && direction != null) {
             startMovement(direction);
@@ -41,14 +42,13 @@ public class PlayerController implements Controller {
     }
 
     private void startMovement(Direction direction) {
-        GridPoint2 destination =
-                direction.move(player.getPosition());
+        GridPoint2 destination = direction.move(player.getPosition());
+
         for (Obstacle obstacle : obstacles) {
             if (obstacle.getPosition().equals(destination)) {
                 return;
             }
         }
-
 
         player.getDestination().set(destination);
         player.setRotation(direction.getRotation());
@@ -65,7 +65,7 @@ public class PlayerController implements Controller {
         progress = continueProgress(
                 progress,
                 deltaTime,
-                MOVEMENT_SPEED
+                movementSpeed
         );
 
         player.setMovementProgress(progress);
