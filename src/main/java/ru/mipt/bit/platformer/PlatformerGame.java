@@ -15,16 +15,20 @@ import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.controllers.handlers.KeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
-import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
+import ru.mipt.bit.platformer.domain.world.FileGameWorldLoader;
+import ru.mipt.bit.platformer.domain.world.GameWorldLoader;
 import ru.mipt.bit.platformer.util.Direction;
+import ru.mipt.bit.platformer.util.ResourceReader;
 import ru.mipt.bit.platformer.util.TileMovement;
 
 
 import java.util.Set;
+import java.util.Objects;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
@@ -38,12 +42,24 @@ public class PlatformerGame implements ApplicationListener {
     private GameWorld world;
     private PlayerController playerController;
     private GameRenderer gameRenderer;
+    private final GameWorldLoader worldLoader;
+
+    public PlatformerGame() {
+        this(new FileGameWorldLoader(
+                new ResourceReader(),
+                "maps/default.txt"
+        ));
+    }
+
+    public PlatformerGame(GameWorldLoader worldLoader) {
+        this.worldLoader = Objects.requireNonNull(worldLoader, "worldLoader");
+    }
 
     @Override
     public void create() {
         batch = new SpriteBatch();
 
-        level = new TmxMapLoader().load("level.tmx");
+        level = new TmxMapLoader().load("maps/level.tmx");
 
         TiledMapTileLayer groundLayer = getSingleLayer(level);
         MapRenderer levelRenderer = createSingleLayerMapRenderer(level, batch);
@@ -51,10 +67,10 @@ public class PlatformerGame implements ApplicationListener {
         TileMovement tileMovement =
                 new TileMovement(groundLayer, Interpolation.smooth);
 
-        world = new GameWorld();
+        world = worldLoader.load();
 
         // Ох, сюда бы спринг или другой DI фреймворк
-        StandartMovementKeyBindings bindings = new StandartMovementKeyBindings(
+        StandardMovementKeyBindings bindings = new StandardMovementKeyBindings(
                 Set.of(Input.Keys.UP, Input.Keys.W),
                 Set.of(Input.Keys.LEFT, Input.Keys.A),
                 Set.of(Input.Keys.DOWN, Input.Keys.S),
@@ -77,8 +93,7 @@ public class PlatformerGame implements ApplicationListener {
         PlayerRenderer playerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);
 
-        ObstacleRenderer obstacleRenderer =
-                new ObstacleRenderer(groundLayer, world.getObstacles().get(0));
+        ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
@@ -118,4 +133,5 @@ public class PlatformerGame implements ApplicationListener {
         level.dispose();
         batch.dispose();
     }
+
 }
