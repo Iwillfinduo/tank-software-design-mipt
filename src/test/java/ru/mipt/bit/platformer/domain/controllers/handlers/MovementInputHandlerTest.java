@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.util.Direction;
 
 import java.util.Set;
@@ -21,14 +21,14 @@ public class MovementInputHandlerTest {
 
     private AutoCloseable mocks;
     private KeyInput gdxKeyInput;
-    private StandartMovementKeyBindings bindings;
+    private StandardMovementKeyBindings bindings;
 
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
         Gdx.input = input;
         gdxKeyInput = new GdxKeyInput();
-        bindings = new StandartMovementKeyBindings(
+        bindings = new StandardMovementKeyBindings(
                 Set.of(Input.Keys.UP, Input.Keys.W),
                 Set.of(Input.Keys.LEFT, Input.Keys.A),
                 Set.of(Input.Keys.DOWN, Input.Keys.S),

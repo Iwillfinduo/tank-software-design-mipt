@@ -10,8 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MovementKeyBindingsTest {
 
-    private final StandartMovementKeyBindings bindings =
-            new StandartMovementKeyBindings(
+    private final StandardMovementKeyBindings bindings =
+            new StandardMovementKeyBindings(
                     Set.of(Input.Keys.UP, Input.Keys.W),
                     Set.of(Input.Keys.LEFT, Input.Keys.A),
                     Set.of(Input.Keys.DOWN, Input.Keys.S),
@@ -22,7 +22,7 @@ class MovementKeyBindingsTest {
     void containsAllUpKeys() {
         assertEquals(
                 Set.of(Input.Keys.UP, Input.Keys.W),
-                bindings.getUpKeys()
+                bindings.upKeys()
         );
     }
 
@@ -30,7 +30,7 @@ class MovementKeyBindingsTest {
     void containsAllLeftKeys() {
         assertEquals(
                 Set.of(Input.Keys.LEFT, Input.Keys.A),
-                bindings.getLeftKeys()
+                bindings.leftKeys()
         );
     }
 
@@ -38,7 +38,7 @@ class MovementKeyBindingsTest {
     void containsAllDownKeys() {
         assertEquals(
                 Set.of(Input.Keys.DOWN, Input.Keys.S),
-                bindings.getDownKeys()
+                bindings.downKeys()
         );
     }
 
@@ -46,13 +46,13 @@ class MovementKeyBindingsTest {
     void containsAllRightKeys() {
         assertEquals(
                 Set.of(Input.Keys.RIGHT, Input.Keys.D),
-                bindings.getRightKeys()
+                bindings.rightKeys()
         );
     }
 
     @Test
     void supportsMultipleKeysForOneDirection() {
-        assertTrue(bindings.getUpKeys().contains(Input.Keys.UP));
-        assertTrue(bindings.getUpKeys().contains(Input.Keys.W));
+        assertTrue(bindings.upKeys().contains(Input.Keys.UP));
+        assertTrue(bindings.upKeys().contains(Input.Keys.W));
     }
 }

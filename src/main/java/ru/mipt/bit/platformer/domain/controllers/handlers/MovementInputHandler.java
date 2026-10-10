@@ -1,6 +1,6 @@
 package ru.mipt.bit.platformer.domain.controllers.handlers;
 
-import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandartMovementKeyBindings;
+import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.util.Direction;
 
 import java.util.Set;
@@ -8,30 +8,30 @@ import java.util.Set;
 public class MovementInputHandler implements InputHandler<Direction> {
 
     private final KeyInput keyInput;
-    private final StandartMovementKeyBindings bindings;
+    private final StandardMovementKeyBindings bindings;
 
     public MovementInputHandler(
             KeyInput keyInput,
-            StandartMovementKeyBindings bindings
+            StandardMovementKeyBindings bindings
     ) {
         this.keyInput = keyInput;
         this.bindings = bindings;
     }
     @Override
     public Direction handle() {
-        if (anyPressed(bindings.getUpKeys())) {
+        if (anyPressed(bindings.upKeys())) {
             return Direction.UP;
         }
 
-        if (anyPressed(bindings.getLeftKeys())) {
+        if (anyPressed(bindings.leftKeys())) {
             return Direction.LEFT;
         }
 
-        if (anyPressed(bindings.getDownKeys())) {
+        if (anyPressed(bindings.downKeys())) {
             return Direction.DOWN;
         }
 
-        if (anyPressed(bindings.getRightKeys())) {
+        if (anyPressed(bindings.rightKeys())) {
             return Direction.RIGHT;
         }
 

@@ -15,23 +15,19 @@ public class ObstacleRenderer implements EntityRenderer<Obstacle> {
     private final TextureRegion graphics;
     private final Rectangle rectangle;
 
-    public ObstacleRenderer(
-            TiledMapTileLayer groundLayer,
-            Obstacle obstacle
-    ) {
+    private final TiledMapTileLayer groundLayer;
+
+    public ObstacleRenderer(TiledMapTileLayer groundLayer) {
+        this.groundLayer = groundLayer;
         texture = new Texture("images/greenTree.png");
         graphics = new TextureRegion(texture);
         rectangle = createBoundingRectangle(graphics);
-
-        moveRectangleAtTileCenter(
-                groundLayer,
-                rectangle,
-                obstacle.getPosition()
-        );
     }
+
 
     @Override
     public void render(Batch batch, Obstacle obstacle) {
+        moveRectangleAtTileCenter(groundLayer, rectangle, obstacle.getPosition());
         drawTextureRegionUnscaled(
                 batch,
                 graphics,
