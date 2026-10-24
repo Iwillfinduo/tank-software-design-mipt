@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.GridPoint2;
 import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.entities.Obstacle;
 import ru.mipt.bit.platformer.domain.entities.Player;
+import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.util.Direction;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class PlayerController implements Controller {
     private final List<Obstacle> obstacles;
     private final InputHandler<Direction> inputHandler;
     private final float movementSpeed;
+    private final GameWorld world;
 
     public PlayerController(
             Player player,
@@ -24,10 +26,21 @@ public class PlayerController implements Controller {
             InputHandler<Direction> inputHandler,
             float movementSpeed
     ) {
+        this(player, obstacles, inputHandler, movementSpeed, null);
+    }
+
+    public PlayerController(Player player, GameWorld world, InputHandler<Direction> inputHandler,
+                             float movementSpeed) {
+        this(player, world.getObstacles(), inputHandler, movementSpeed, world);
+    }
+
+    private PlayerController(Player player, List<Obstacle> obstacles, InputHandler<Direction> inputHandler,
+                             float movementSpeed, GameWorld world) {
         this.player = player;
         this.obstacles = obstacles;
         this.inputHandler = inputHandler;
         this.movementSpeed = movementSpeed;
+        this.world = world;
     }
 
     @Override
@@ -42,6 +55,10 @@ public class PlayerController implements Controller {
     }
 
     private void startMovement(Direction direction) {
+        if (world != null) {
+            new MoveCommand(world, player, direction).execute();
+            return;
+        }
         GridPoint2 destination = direction.move(player.getPosition());
 
         for (Obstacle obstacle : obstacles) {
@@ -71,7 +88,8 @@ public class PlayerController implements Controller {
         player.setMovementProgress(progress);
 
         if (isEqual(progress, 1f)) {
-            player.reachDestination();
+            if (world != null) world.finishMovement(player);
+            else player.reachDestination();
         }
     }
 }

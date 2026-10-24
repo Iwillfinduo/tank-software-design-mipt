@@ -12,7 +12,7 @@ public class RandomGameDesktopLauncher {
         config.setWindowedMode(1280, 1024);
 
         new Lwjgl3Application(
-                new PlatformerGame(new RandomGameWorldLoader(10, 8, 15)),
+                new PlatformerGame(new RandomGameWorldLoader(10, 8, 15, 5, new java.util.Random())),
                 config
         );
     }

@@ -15,6 +15,9 @@ import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.controllers.handlers.KeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
+import ru.mipt.bit.platformer.domain.controllers.EnemyController;
+import ru.mipt.bit.platformer.domain.controllers.strategies.RandomDirectionStrategy;
+import ru.mipt.bit.platformer.domain.render.EnemyRenderer;
 import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
@@ -28,7 +31,10 @@ import ru.mipt.bit.platformer.util.TileMovement;
 
 
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
@@ -41,13 +47,14 @@ public class PlatformerGame implements ApplicationListener {
 
     private GameWorld world;
     private PlayerController playerController;
+    private List<EnemyController> enemyControllers;
     private GameRenderer gameRenderer;
     private final GameWorldLoader worldLoader;
 
     public PlatformerGame() {
         this(new FileGameWorldLoader(
                 new ResourceReader(),
-                "maps/default.txt"
+                "maps/test-map-with-enemies.txt"
         ));
     }
 
@@ -82,24 +89,31 @@ public class PlatformerGame implements ApplicationListener {
         InputHandler<Direction> movementInputHandler =
                 new MovementInputHandler(keyInput, bindings);
 
-        playerController =
-                new PlayerController(
-                        world.getPlayer(),
-                        world.getObstacles(),
-                        movementInputHandler,
-                        0.4f
-                );
+        playerController = new PlayerController(world.getPlayer(), world, movementInputHandler, 0.4f);
+        enemyControllers = new ArrayList<>();
+        Random enemyDelayRandom = new Random();
+        for (ru.mipt.bit.platformer.domain.entities.Enemy enemy : world.getEnemies()) {
+            enemyControllers.add(new EnemyController(
+                    enemy,
+                    world,
+                    new RandomDirectionStrategy(),
+                    0.4f,
+                    1.0f,
+                    enemyDelayRandom.nextFloat() * 1.0f
+            ));
+        }
 
         PlayerRenderer playerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);
 
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
+        EnemyRenderer enemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
                 batch,
                 playerRenderer,
-                obstacleRenderer
+                obstacleRenderer, enemyRenderer
         );
     }
 
@@ -111,6 +125,7 @@ public class PlatformerGame implements ApplicationListener {
         float deltaTime = Gdx.graphics.getDeltaTime();
 
         playerController.update(deltaTime);
+        for (EnemyController controller : enemyControllers) controller.update(deltaTime);
 
         gameRenderer.render(world);
     }

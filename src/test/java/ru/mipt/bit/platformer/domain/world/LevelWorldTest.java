@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.GridPoint2;
 import org.junit.jupiter.api.Test;
 import ru.mipt.bit.platformer.domain.level.LevelFileLoader;
 import ru.mipt.bit.platformer.domain.level.LevelGenerator;
+import ru.mipt.bit.platformer.domain.entities.EnemyTank;
 
 import java.util.List;
 import java.util.Random;
@@ -11,6 +12,7 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LevelWorldTest {
 
@@ -27,6 +29,20 @@ class LevelWorldTest {
 
         assertEquals(new GridPoint2(5, 1), world.getPlayer().getPosition());
         assertEquals(15, world.getObstacles().size());
+    }
+
+    @Test
+    void fileLevelContainsEnemyTanks() {
+        GameWorld world = LevelFileLoader.load(List.of(
+                "E_X",
+                "_T_",
+                "__E"
+        ));
+
+        assertEquals(2, world.getEnemies().size());
+        assertTrue(world.getEnemies().stream().allMatch(EnemyTank.class::isInstance));
+        assertEquals(new GridPoint2(0, 2), world.getEnemies().get(0).getPosition());
+        assertEquals(new GridPoint2(2, 0), world.getEnemies().get(1).getPosition());
     }
 
     @Test
