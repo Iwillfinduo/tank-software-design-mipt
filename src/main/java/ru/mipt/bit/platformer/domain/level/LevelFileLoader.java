@@ -2,6 +2,8 @@ package ru.mipt.bit.platformer.domain.level;
 
 import ru.mipt.bit.platformer.domain.entities.Obstacle;
 import ru.mipt.bit.platformer.domain.entities.Player;
+import ru.mipt.bit.platformer.domain.entities.Enemy;
+import ru.mipt.bit.platformer.domain.entities.EnemyTank;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,7 @@ public final class LevelFileLoader {
 
         Player player = null;
         List<Obstacle> obstacles = new ArrayList<>();
+        List<Enemy> enemies = new ArrayList<>();
         for (int y = 0; y < lines.size(); y++) {
             int gameY = lines.size() - 1 - y;
             String line = lines.get(y);
@@ -34,6 +37,8 @@ public final class LevelFileLoader {
                 char cell = line.charAt(x);
                 if (cell == 'T') {
                     obstacles.add(new Obstacle(x, gameY));
+                } else if (cell == 'E') {
+                    enemies.add(new EnemyTank(x, gameY));
                 } else if (cell == 'X') {
                     if (player != null) {
                         throw new IllegalArgumentException("Level must contain exactly one player start");
@@ -47,7 +52,7 @@ public final class LevelFileLoader {
         if (player == null) {
             throw new IllegalArgumentException("Level must contain one player start");
         }
-        return new GameWorld(player, obstacles);
+        return new GameWorld(player, obstacles, enemies, width, lines.size());
     }
 
     public static GameWorld loadText(String text) {
