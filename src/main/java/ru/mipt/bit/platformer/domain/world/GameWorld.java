@@ -101,6 +101,10 @@ public class GameWorld {
         return true;
     }
 
+    public boolean isBlocked(GridPoint2 cell) {
+        return isBlocked(cell, null);
+    }
+
     private boolean isBlocked(GridPoint2 cell, Tank moving) {
         for (Obstacle obstacle : obstacles) if (obstacle.getPosition().equals(cell)) return true;
         if (player != moving && (player.getPosition().equals(cell) || player.getDestination().equals(cell))) return true;
