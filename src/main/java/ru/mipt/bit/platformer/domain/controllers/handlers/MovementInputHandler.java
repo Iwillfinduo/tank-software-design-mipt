@@ -3,39 +3,34 @@ package ru.mipt.bit.platformer.domain.controllers.handlers;
 import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.util.Direction;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 public class MovementInputHandler implements InputHandler<Direction> {
 
     private final KeyInput keyInput;
-    private final StandardMovementKeyBindings bindings;
+    private final Map<Set<Integer>, Direction> directionBindings;
 
     public MovementInputHandler(
             KeyInput keyInput,
             StandardMovementKeyBindings bindings
     ) {
         this.keyInput = keyInput;
-        this.bindings = bindings;
+        directionBindings = new LinkedHashMap<>();
+        directionBindings.put(bindings.upKeys(), Direction.UP);
+        directionBindings.put(bindings.leftKeys(), Direction.LEFT);
+        directionBindings.put(bindings.downKeys(), Direction.DOWN);
+        directionBindings.put(bindings.rightKeys(), Direction.RIGHT);
     }
+
     @Override
     public Direction handle() {
-        if (anyPressed(bindings.upKeys())) {
-            return Direction.UP;
-        }
-
-        if (anyPressed(bindings.leftKeys())) {
-            return Direction.LEFT;
-        }
-
-        if (anyPressed(bindings.downKeys())) {
-            return Direction.DOWN;
-        }
-
-        if (anyPressed(bindings.rightKeys())) {
-            return Direction.RIGHT;
-        }
-
-        return null;
+        return directionBindings.entrySet().stream()
+                .filter(binding -> anyPressed(binding.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
     }
 
     private boolean anyPressed(Set<Integer> keys) {

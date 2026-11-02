@@ -14,6 +14,8 @@ import ru.mipt.bit.platformer.domain.controllers.handlers.GdxKeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.controllers.handlers.KeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
+import ru.mipt.bit.platformer.domain.controllers.CompositeController;
+import ru.mipt.bit.platformer.domain.controllers.Controller;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
 import ru.mipt.bit.platformer.domain.controllers.EnemyController;
 import ru.mipt.bit.platformer.domain.controllers.strategies.RandomDirectionStrategy;
@@ -46,8 +48,7 @@ public class PlatformerGame implements ApplicationListener {
     private TiledMap level;
 
     private GameWorld world;
-    private PlayerController playerController;
-    private List<EnemyController> enemyControllers;
+    private Controller gameController;
     private GameRenderer gameRenderer;
     private final GameWorldLoader worldLoader;
 
@@ -89,11 +90,11 @@ public class PlatformerGame implements ApplicationListener {
         InputHandler<Direction> movementInputHandler =
                 new MovementInputHandler(keyInput, bindings);
 
-        playerController = new PlayerController(world.getPlayer(), world, movementInputHandler, 0.4f);
-        enemyControllers = new ArrayList<>();
+        List<Controller> controllers = new ArrayList<>();
+        controllers.add(new PlayerController(world.getPlayer(), world, movementInputHandler, 0.4f));
         Random enemyDelayRandom = new Random();
         for (ru.mipt.bit.platformer.domain.entities.Enemy enemy : world.getEnemies()) {
-            enemyControllers.add(new EnemyController(
+            controllers.add(new EnemyController(
                     enemy,
                     world,
                     new RandomDirectionStrategy(),
@@ -102,6 +103,7 @@ public class PlatformerGame implements ApplicationListener {
                     enemyDelayRandom.nextFloat() * 1.0f
             ));
         }
+        gameController = new CompositeController(controllers);
 
         PlayerRenderer playerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);
@@ -124,8 +126,7 @@ public class PlatformerGame implements ApplicationListener {
 
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        playerController.update(deltaTime);
-        for (EnemyController controller : enemyControllers) controller.update(deltaTime);
+        gameController.update(deltaTime);
 
         gameRenderer.render(world);
     }
