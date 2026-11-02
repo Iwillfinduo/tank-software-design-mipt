@@ -9,19 +9,25 @@ import com.badlogic.gdx.maps.MapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.math.Interpolation;
 import ru.mipt.bit.platformer.domain.controllers.handlers.GdxKeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
 import ru.mipt.bit.platformer.domain.controllers.handlers.KeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.MovementInputHandler;
+import ru.mipt.bit.platformer.domain.controllers.CompositeController;
+import ru.mipt.bit.platformer.domain.controllers.Controller;
 import ru.mipt.bit.platformer.domain.controllers.PlayerController;
 import ru.mipt.bit.platformer.domain.controllers.EnemyController;
+import ru.mipt.bit.platformer.domain.controllers.PlayerShootController;
+import ru.mipt.bit.platformer.domain.controllers.EnemyShootController;
 import ru.mipt.bit.platformer.domain.controllers.strategies.RandomDirectionStrategy;
 import ru.mipt.bit.platformer.domain.render.EnemyRenderer;
 import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
 import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
+import ru.mipt.bit.platformer.domain.render.BulletRenderer;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.domain.world.FileGameWorldLoader;
 import ru.mipt.bit.platformer.domain.world.GameWorldLoader;
@@ -46,8 +52,7 @@ public class PlatformerGame implements ApplicationListener {
     private TiledMap level;
 
     private GameWorld world;
-    private PlayerController playerController;
-    private List<EnemyController> enemyControllers;
+    private Controller gameController;
     private GameRenderer gameRenderer;
     private final GameWorldLoader worldLoader;
 
@@ -66,15 +71,15 @@ public class PlatformerGame implements ApplicationListener {
     public void create() {
         batch = new SpriteBatch();
 
+        world = worldLoader.load();
         level = new TmxMapLoader().load("maps/level.tmx");
+        resizeGroundLayer(level, world.getWidth(), world.getHeight());
 
         TiledMapTileLayer groundLayer = getSingleLayer(level);
         MapRenderer levelRenderer = createSingleLayerMapRenderer(level, batch);
 
         TileMovement tileMovement =
                 new TileMovement(groundLayer, Interpolation.smooth);
-
-        world = worldLoader.load();
 
         // Ох, сюда бы спринг или другой DI фреймворк
         StandardMovementKeyBindings bindings = new StandardMovementKeyBindings(
@@ -89,11 +94,12 @@ public class PlatformerGame implements ApplicationListener {
         InputHandler<Direction> movementInputHandler =
                 new MovementInputHandler(keyInput, bindings);
 
-        playerController = new PlayerController(world.getPlayer(), world, movementInputHandler, 0.4f);
-        enemyControllers = new ArrayList<>();
+        List<Controller> controllers = new ArrayList<>();
+        controllers.add(new PlayerController(world.getPlayer(), world, movementInputHandler, 0.4f));
+        controllers.add(new PlayerShootController(world, world.getPlayer(), keyInput, Input.Keys.SPACE));
         Random enemyDelayRandom = new Random();
         for (ru.mipt.bit.platformer.domain.entities.Enemy enemy : world.getEnemies()) {
-            enemyControllers.add(new EnemyController(
+            controllers.add(new EnemyController(
                     enemy,
                     world,
                     new RandomDirectionStrategy(),
@@ -101,20 +107,48 @@ public class PlatformerGame implements ApplicationListener {
                     1.0f,
                     enemyDelayRandom.nextFloat() * 1.0f
             ));
+            controllers.add(new EnemyShootController(world, enemy, enemyDelayRandom, 0.15f));
         }
+        gameController = new CompositeController(controllers);
 
         PlayerRenderer playerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);
 
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
         EnemyRenderer enemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
+        BulletRenderer bulletRenderer = new BulletRenderer(groundLayer, tileMovement);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
                 batch,
                 playerRenderer,
-                obstacleRenderer, enemyRenderer
+                obstacleRenderer, enemyRenderer, bulletRenderer, world
         );
+    }
+
+    private static void resizeGroundLayer(TiledMap map, int width, int height) {
+        if (width <= 0 || height <= 0) return;
+
+        TiledMapTileLayer source = getSingleLayer(map);
+        if (source.getWidth() == width && source.getHeight() == height) return;
+
+        TiledMapTileLayer resized = new TiledMapTileLayer(
+                width,
+                height,
+                source.getTileWidth(),
+                source.getTileHeight()
+        );
+        resized.setName(source.getName());
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Cell cell = source.getCell(x % source.getWidth(), y % source.getHeight());
+                if (cell != null) resized.setCell(x, y, cell);
+            }
+        }
+
+        map.getLayers().remove(source);
+        map.getLayers().add(resized);
     }
 
     @Override
@@ -124,8 +158,8 @@ public class PlatformerGame implements ApplicationListener {
 
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        playerController.update(deltaTime);
-        for (EnemyController controller : enemyControllers) controller.update(deltaTime);
+        gameController.update(deltaTime);
+        world.liveTick(deltaTime);
 
         gameRenderer.render(world);
     }

@@ -8,6 +8,7 @@ import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.util.Direction;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.badlogic.gdx.math.MathUtils.isEqual;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
@@ -15,30 +16,46 @@ import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 public class PlayerController implements Controller {
 
     private final Player player;
-    private final List<Obstacle> obstacles;
+    private final CellCollisionChecker collisionChecker;
     private final InputHandler<Direction> inputHandler;
     private final float movementSpeed;
     private final GameWorld world;
 
     public PlayerController(
             Player player,
-            List<Obstacle> obstacles,
+            List<? extends Obstacle> obstacles,
             InputHandler<Direction> inputHandler,
             float movementSpeed
     ) {
-        this(player, obstacles, inputHandler, movementSpeed, null);
+        this(
+                player,
+                cell -> obstacles.stream().anyMatch(obstacle -> obstacle.getPosition().equals(cell)),
+                inputHandler,
+                movementSpeed,
+                null
+        );
+    }
+
+    public PlayerController(
+            Player player,
+            CellCollisionChecker collisionChecker,
+            InputHandler<Direction> inputHandler,
+            float movementSpeed
+    ) {
+        this(player, collisionChecker, inputHandler, movementSpeed, null);
     }
 
     public PlayerController(Player player, GameWorld world, InputHandler<Direction> inputHandler,
                              float movementSpeed) {
-        this(player, world.getObstacles(), inputHandler, movementSpeed, world);
+        this(player, world::isBlocked, inputHandler, movementSpeed, world);
     }
 
-    private PlayerController(Player player, List<Obstacle> obstacles, InputHandler<Direction> inputHandler,
+    private PlayerController(Player player, CellCollisionChecker collisionChecker,
+                             InputHandler<Direction> inputHandler,
                              float movementSpeed, GameWorld world) {
-        this.player = player;
-        this.obstacles = obstacles;
-        this.inputHandler = inputHandler;
+        this.player = Objects.requireNonNull(player, "player");
+        this.collisionChecker = Objects.requireNonNull(collisionChecker, "collisionChecker");
+        this.inputHandler = Objects.requireNonNull(inputHandler, "inputHandler");
         this.movementSpeed = movementSpeed;
         this.world = world;
     }
@@ -61,11 +78,7 @@ public class PlayerController implements Controller {
         }
         GridPoint2 destination = direction.move(player.getPosition());
 
-        for (Obstacle obstacle : obstacles) {
-            if (obstacle.getPosition().equals(destination)) {
-                return;
-            }
-        }
+        if (collisionChecker.isBlocked(destination)) return;
 
         player.getDestination().set(destination);
         player.setRotation(direction.getRotation());
