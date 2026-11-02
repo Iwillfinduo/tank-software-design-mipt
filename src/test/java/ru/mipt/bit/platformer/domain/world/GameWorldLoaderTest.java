@@ -32,6 +32,8 @@ class GameWorldLoaderTest {
 
         assertEquals(new GridPoint2(1, 0), world.getPlayer().getPosition());
         assertEquals(new GridPoint2(2, 1), world.getObstacles().get(0).getPosition());
+        assertEquals(3, world.getWidth());
+        assertEquals(2, world.getHeight());
     }
 
     @Test

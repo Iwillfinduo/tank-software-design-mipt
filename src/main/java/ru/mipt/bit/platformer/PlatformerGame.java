@@ -9,6 +9,7 @@ import com.badlogic.gdx.maps.MapRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
 import com.badlogic.gdx.math.Interpolation;
 import ru.mipt.bit.platformer.domain.controllers.handlers.GdxKeyInput;
 import ru.mipt.bit.platformer.domain.controllers.handlers.InputHandler;
@@ -67,15 +68,15 @@ public class PlatformerGame implements ApplicationListener {
     public void create() {
         batch = new SpriteBatch();
 
+        world = worldLoader.load();
         level = new TmxMapLoader().load("maps/level.tmx");
+        resizeGroundLayer(level, world.getWidth(), world.getHeight());
 
         TiledMapTileLayer groundLayer = getSingleLayer(level);
         MapRenderer levelRenderer = createSingleLayerMapRenderer(level, batch);
 
         TileMovement tileMovement =
                 new TileMovement(groundLayer, Interpolation.smooth);
-
-        world = worldLoader.load();
 
         // Ох, сюда бы спринг или другой DI фреймворк
         StandardMovementKeyBindings bindings = new StandardMovementKeyBindings(
@@ -117,6 +118,31 @@ public class PlatformerGame implements ApplicationListener {
                 playerRenderer,
                 obstacleRenderer, enemyRenderer
         );
+    }
+
+    private static void resizeGroundLayer(TiledMap map, int width, int height) {
+        if (width <= 0 || height <= 0) return;
+
+        TiledMapTileLayer source = getSingleLayer(map);
+        if (source.getWidth() == width && source.getHeight() == height) return;
+
+        TiledMapTileLayer resized = new TiledMapTileLayer(
+                width,
+                height,
+                source.getTileWidth(),
+                source.getTileHeight()
+        );
+        resized.setName(source.getName());
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Cell cell = source.getCell(x % source.getWidth(), y % source.getHeight());
+                if (cell != null) resized.setCell(x, y, cell);
+            }
+        }
+
+        map.getLayers().remove(source);
+        map.getLayers().add(resized);
     }
 
     @Override
