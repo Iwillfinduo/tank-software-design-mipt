@@ -12,7 +12,7 @@ import ru.mipt.bit.platformer.domain.entities.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameRenderer implements WorldObserver {
+public class GameRenderer implements WorldObserver, HealthBarVisibility {
 
     private final MapRenderer levelRenderer;
     private final Batch batch;
@@ -84,5 +84,17 @@ public class GameRenderer implements WorldObserver {
         obstacleRenderer.dispose();
         if (enemyRenderer != null) enemyRenderer.dispose();
         if (bulletRenderer != null) bulletRenderer.dispose();
+    }
+
+    @Override
+    public void toggleHealthBars() {
+        toggle(playerRenderer);
+        toggle(enemyRenderer);
+    }
+
+    private static <T> void toggle(EntityRenderer<T> renderer) {
+        if (renderer instanceof HealthBarVisibility healthBars) {
+            healthBars.toggleHealthBars();
+        }
     }
 }

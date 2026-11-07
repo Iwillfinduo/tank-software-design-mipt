@@ -21,6 +21,7 @@ import ru.mipt.bit.platformer.domain.controllers.PlayerController;
 import ru.mipt.bit.platformer.domain.controllers.EnemyController;
 import ru.mipt.bit.platformer.domain.controllers.PlayerShootController;
 import ru.mipt.bit.platformer.domain.controllers.EnemyShootController;
+import ru.mipt.bit.platformer.domain.controllers.HealthBarsToggleController;
 import ru.mipt.bit.platformer.domain.controllers.strategies.RandomDirectionStrategy;
 import ru.mipt.bit.platformer.domain.render.EnemyRenderer;
 import ru.mipt.bit.platformer.domain.controllers.handlers.bindings.StandardMovementKeyBindings;
@@ -28,6 +29,8 @@ import ru.mipt.bit.platformer.domain.render.GameRenderer;
 import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
 import ru.mipt.bit.platformer.domain.render.BulletRenderer;
+import ru.mipt.bit.platformer.domain.render.HealthBarRendererDecorator;
+import ru.mipt.bit.platformer.domain.entities.Player;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.domain.world.FileGameWorldLoader;
 import ru.mipt.bit.platformer.domain.world.GameWorldLoader;
@@ -109,14 +112,16 @@ public class PlatformerGame implements ApplicationListener {
             ));
             controllers.add(new EnemyShootController(world, enemy, enemyDelayRandom, 0.15f));
         }
-        gameController = new CompositeController(controllers);
-
-        PlayerRenderer playerRenderer =
+        PlayerRenderer basePlayerRenderer =
                 new PlayerRenderer(groundLayer, tileMovement);
 
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
-        EnemyRenderer enemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
+        EnemyRenderer baseEnemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
         BulletRenderer bulletRenderer = new BulletRenderer(groundLayer, tileMovement);
+        HealthBarRendererDecorator<Player> playerRenderer =
+                new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement);
+        HealthBarRendererDecorator<ru.mipt.bit.platformer.domain.entities.Enemy> enemyRenderer =
+                new HealthBarRendererDecorator<>(baseEnemyRenderer, tileMovement);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
@@ -124,6 +129,8 @@ public class PlatformerGame implements ApplicationListener {
                 playerRenderer,
                 obstacleRenderer, enemyRenderer, bulletRenderer, world
         );
+        controllers.add(new HealthBarsToggleController(keyInput, Input.Keys.L, gameRenderer));
+        gameController = new CompositeController(controllers);
     }
 
     private static void resizeGroundLayer(TiledMap map, int width, int height) {
