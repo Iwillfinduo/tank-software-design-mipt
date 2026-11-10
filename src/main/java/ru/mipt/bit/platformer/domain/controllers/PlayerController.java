@@ -10,8 +10,6 @@ import ru.mipt.bit.platformer.util.Direction;
 import java.util.List;
 import java.util.Objects;
 
-import static com.badlogic.gdx.math.MathUtils.isEqual;
-import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 public class PlayerController implements Controller {
 
@@ -68,7 +66,11 @@ public class PlayerController implements Controller {
             startMovement(direction);
         }
 
-        updateMovement(deltaTime);
+        if (world != null) {
+            world.updateMovement(player, deltaTime, movementSpeed);
+        } else if (player.updateMovement(deltaTime, movementSpeed)) {
+            player.reachDestination();
+        }
     }
 
     private void startMovement(Direction direction) {
@@ -85,24 +87,4 @@ public class PlayerController implements Controller {
         player.setMovementProgress(0f);
     }
 
-    private void updateMovement(float deltaTime) {
-        float progress = player.getMovementProgress();
-
-        if (isEqual(progress, 1f)) {
-            return;
-        }
-
-        progress = continueProgress(
-                progress,
-                deltaTime,
-                movementSpeed
-        );
-
-        player.setMovementProgress(progress);
-
-        if (isEqual(progress, 1f)) {
-            if (world != null) world.finishMovement(player);
-            else player.reachDestination();
-        }
-    }
 }

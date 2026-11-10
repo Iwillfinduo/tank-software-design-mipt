@@ -3,8 +3,6 @@ package ru.mipt.bit.platformer.domain.controllers;
 import ru.mipt.bit.platformer.domain.controllers.strategies.DirectionStrategy;
 import ru.mipt.bit.platformer.domain.entities.Enemy;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
-import static com.badlogic.gdx.math.MathUtils.isEqual;
-import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 public final class EnemyController implements Controller {
     private final Enemy enemy;
@@ -58,10 +56,7 @@ public final class EnemyController implements Controller {
 
         if (!enemy.isMoving()) new MoveCommand(world, enemy, strategy.chooseDirection()).execute();
         if (enemy.isMoving()) {
-            float progress = continueProgress(enemy.getMovementProgress(), deltaTime, speed);
-            enemy.setMovementProgress(progress);
-            if (isEqual(progress, 1f)) {
-                world.finishMovement(enemy);
+            if (world.updateMovement(enemy, deltaTime, speed)) {
                 delayRemaining = moveDelay;
             }
         }

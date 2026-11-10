@@ -223,9 +223,17 @@ public class GameWorld {
         return false;
     }
 
-    public void finishMovement(Tank tank) {
+    void finishMovement(Tank tank) {
         reserved.remove(tank.getPosition());
         reserved.remove(tank.getDestination());
         tank.reachDestination();
+    }
+
+    public boolean updateMovement(Tank tank, float deltaTime, float movementSpeed) {
+        boolean finished = tank.updateMovement(deltaTime, movementSpeed);
+        if (finished) {
+            finishMovement(tank);
+        }
+        return finished;
     }
 }

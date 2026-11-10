@@ -1,6 +1,7 @@
 package ru.mipt.bit.platformer.domain.entities;
 
 import com.badlogic.gdx.math.GridPoint2;
+import ru.mipt.bit.platformer.util.GdxGameUtils;
 
 public abstract class Tank implements Entity {
     private static final int MAX_HEALTH = 100;
@@ -23,6 +24,19 @@ public abstract class Tank implements Entity {
     public void setMovementProgress(float value) { movementProgress = value; }
     public void setRotation(float value) { rotation = value; }
     public void reachDestination() { position.set(destination); }
+    public boolean updateMovement(float deltaTime, float movementSpeed) {
+        if (deltaTime < 0f || movementSpeed <= 0f) {
+            throw new IllegalArgumentException("Delta time must not be negative and speed must be positive");
+        }
+        if (!isMoving()) return false;
+
+        movementProgress = GdxGameUtils.continueProgress(
+                movementProgress,
+                deltaTime,
+                movementSpeed
+        );
+        return movementProgress == 1f;
+    }
     public int getHealth() { return health; }
     public int getMaxHealth() { return MAX_HEALTH; }
     public boolean isAlive() { return health > 0; }

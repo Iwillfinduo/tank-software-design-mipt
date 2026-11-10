@@ -2,15 +2,16 @@ package ru.mipt.bit.platformer.domain.world;
 
 import com.badlogic.gdx.math.GridPoint2;
 import org.junit.jupiter.api.Test;
+import ru.mipt.bit.platformer.domain.entities.Tank;
 import ru.mipt.bit.platformer.domain.level.LevelFileLoader;
 import ru.mipt.bit.platformer.domain.level.LevelGenerator;
 import ru.mipt.bit.platformer.domain.entities.EnemyTank;
+import ru.mipt.bit.platformer.domain.entities.Obstacle;
 
 import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -47,12 +48,27 @@ class LevelWorldTest {
 
     @Test
     void generatedLevelUsesDistinctFreePlayerCell() {
-        GameWorld world = LevelGenerator.generate(5, 4, 10, new Random(42));
+        GameWorld world = LevelGenerator.generate(5, 4, 6, 3, new Random(42));
 
-        assertEquals(10, world.getObstacles().size());
-        assertNotEquals(
-                world.getPlayer().getPosition(),
-                world.getObstacles().get(0).getPosition()
+        assertEquals(new GridPoint2(0, 3), world.getPlayer().getPosition());
+        assertEquals(
+                List.of(
+                        new GridPoint2(1, 3),
+                        new GridPoint2(4, 2),
+                        new GridPoint2(3, 2),
+                        new GridPoint2(0, 1),
+                        new GridPoint2(1, 2),
+                        new GridPoint2(2, 3)
+                ),
+                world.getObstacles().stream().map(Obstacle::getPosition).toList()
+        );
+        assertEquals(
+                List.of(
+                        new GridPoint2(3, 3),
+                        new GridPoint2(3, 1),
+                        new GridPoint2(2, 0)
+                ),
+                world.getEnemies().stream().map(Tank::getPosition).toList()
         );
     }
 
