@@ -55,7 +55,7 @@ public class PlatformerGame implements ApplicationListener {
     private TiledMap level;
 
     private GameWorld world;
-    private Controller gameController;
+    private CompositeController gameController;
     private GameRenderer gameRenderer;
     private final GameWorldLoader worldLoader;
 
@@ -117,7 +117,7 @@ public class PlatformerGame implements ApplicationListener {
 
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
         EnemyRenderer baseEnemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
-        BulletRenderer bulletRenderer = new BulletRenderer(groundLayer, tileMovement);
+        BulletRenderer bulletRenderer = new BulletRenderer(tileMovement);
         HealthBarRendererDecorator<Player> playerRenderer =
                 new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement);
         HealthBarRendererDecorator<ru.mipt.bit.platformer.domain.entities.Enemy> enemyRenderer =
@@ -165,10 +165,13 @@ public class PlatformerGame implements ApplicationListener {
 
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        gameController.update(deltaTime);
+        // Frame phases: collect input, execute commands, advance the model, render.
+        List<ru.mipt.bit.platformer.domain.controllers.Command> commands =
+                gameController.collectCommands(deltaTime);
+        gameController.executeCommands(commands);
         world.liveTick(deltaTime);
 
-        gameRenderer.render(world);
+        gameRenderer.render();
     }
 
     @Override

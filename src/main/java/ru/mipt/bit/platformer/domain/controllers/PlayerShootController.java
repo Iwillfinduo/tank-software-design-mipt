@@ -38,13 +38,19 @@ public final class PlayerShootController implements Controller {
     }
 
     @Override public void update(float deltaTime) {
+        java.util.List<Command> commands = new java.util.ArrayList<>();
+        collectCommands(deltaTime, commands);
+        commands.forEach(Command::execute);
+    }
+
+    @Override public void collectCommands(float deltaTime, java.util.Collection<Command> commands) {
         if (deltaTime < 0f) {
             throw new IllegalArgumentException("Delta time must not be negative");
         }
         cooldownRemaining = Math.max(0f, cooldownRemaining - deltaTime);
         boolean pressed = input.isPressed(key);
         if (pressed && !wasPressed && cooldownRemaining == 0f) {
-            new ShootCommand(world, player).execute();
+            commands.add(new ShootCommand(world, player));
             cooldownRemaining = cooldown;
         }
         wasPressed = pressed;

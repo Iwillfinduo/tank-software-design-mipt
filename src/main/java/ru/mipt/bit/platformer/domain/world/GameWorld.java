@@ -15,6 +15,8 @@ import java.util.Random;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.IdentityHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import com.badlogic.gdx.math.GridPoint2;
 import ru.mipt.bit.platformer.util.Direction;
@@ -30,6 +32,8 @@ public class GameWorld {
     private final Set<GridPoint2> reserved = new HashSet<>();
     private final ArrayList<Bullet> bullets = new ArrayList<>();
     private final List<WorldObserver> observers = new CopyOnWriteArrayList<>();
+    private final Set<Tank> removedTanks = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Map<Tank, Float> movementSpeeds = new IdentityHashMap<>();
 
     public GameWorld() {
         this(new Player(1, 1), List.of(new Obstacle(1, 3)), List.of(), -1, -1);
@@ -109,12 +113,17 @@ public class GameWorld {
 
     public Bullet shoot(Tank shooter) {
         if (shooter == null || !shooter.isAlive()) return null;
-        return shoot(shooter, rotationDirection(shooter.getRotation()));
+        Bullet bullet = shooter.shoot();
+        if (bullet == null) return null;
+        bullets.add(bullet);
+        added(bullet);
+        return bullet;
     }
 
     public Bullet shoot(Tank shooter, Direction direction) {
         if (shooter == null || direction == null || !shooter.isAlive()) return null;
-        Bullet bullet = new Bullet(shooter, direction);
+        Bullet bullet = shooter.shoot(direction);
+        if (bullet == null) return null;
         bullets.add(bullet);
         added(bullet);
         return bullet;
@@ -125,9 +134,15 @@ public class GameWorld {
         Iterator<Bullet> iterator = bullets.iterator();
         while (iterator.hasNext()) {
             Bullet bullet = iterator.next();
-            handleBulletCollision(bullet);
+            for (GridPoint2 cell : bullet.getTraversedCells()) {
+                handleBulletCollision(bullet, cell);
+                if (!bullet.isAlive()) break;
+            }
             bullet.update(deltaTime);
-            handleBulletCollision(bullet);
+            for (GridPoint2 cell : bullet.getTraversedCells()) {
+                handleBulletCollision(bullet, cell);
+                if (!bullet.isAlive()) break;
+            }
             if (!bullet.isAlive()) {
                 iterator.remove();
                 removed(bullet);
@@ -135,7 +150,13 @@ public class GameWorld {
         }
     }
 
-    public void liveTick(float deltaTime) { updateBullets(deltaTime); }
+    public void liveTick(float deltaTime) {
+        for (Map.Entry<Tank, Float> entry : movementSpeeds.entrySet()) {
+            Tank tank = entry.getKey();
+            if (tank.isAlive() && !removedTanks.contains(tank)) updateMovement(tank, deltaTime, entry.getValue());
+        }
+        updateBullets(deltaTime);
+    }
     public void updateProjectiles(float deltaTime) { updateBullets(deltaTime); }
 
     private boolean isObstacle(GridPoint2 cell) {
@@ -143,8 +164,11 @@ public class GameWorld {
     }
 
     private void handleBulletCollision(Bullet bullet) {
+        handleBulletCollision(bullet, bullet.getPosition());
+    }
+
+    private void handleBulletCollision(Bullet bullet, GridPoint2 cell) {
         if (!bullet.isAlive()) return;
-        GridPoint2 cell = bullet.getPosition();
         if (!isInside(cell) || isObstacle(cell)) {
             bullet.remove();
             return;
@@ -161,23 +185,28 @@ public class GameWorld {
         if (target != null) {
             target.takeDamage(bullet.getDamage());
             bullet.remove();
-            removeDefeatedEnemy(target);
+            if (!target.isAlive()) removeTank(target);
         }
     }
 
     private Bullet bulletAt(GridPoint2 cell, Bullet excluded) {
         for (Bullet other : bullets) {
-            if (other != excluded && other.isAlive() && other.getPosition().equals(cell)) {
+            if (other != excluded && other.isAlive()
+                    && (other.getPosition().equals(cell) || other.getTraversedCells().contains(cell))) {
                 return other;
             }
         }
         return null;
     }
 
-    private void removeDefeatedEnemy(Tank target) {
-        if (target instanceof Enemy enemy && !enemy.isAlive() && enemies.remove(enemy)) {
-            removed(enemy);
-        }
+    public void removeTank(Tank tank) {
+        if (tank == null || !removedTanks.add(tank)) return;
+        reserved.remove(tank.getPosition());
+        reserved.remove(tank.getDestination());
+        movementSpeeds.remove(tank);
+        tank.setMovementProgress(1f);
+        if (tank instanceof Enemy enemy) enemies.remove(enemy);
+        removed(tank);
     }
 
     private Tank targetAt(GridPoint2 cell, Tank owner) {
@@ -198,7 +227,8 @@ public class GameWorld {
     }
 
     public boolean startMovement(Tank tank, Direction direction) {
-        if (tank == null || direction == null || tank.isMoving()) return false;
+        if (tank == null || direction == null || !tank.isAlive()
+                || removedTanks.contains(tank) || tank.isMoving()) return false;
         GridPoint2 destination = direction.move(tank.getPosition());
         if (!isInside(destination) || reserved.contains(tank.getPosition())
                 || reserved.contains(destination) || isBlocked(destination, tank)) return false;
@@ -210,15 +240,21 @@ public class GameWorld {
         return true;
     }
 
+    public void registerMovementSpeed(Tank tank, float speed) {
+        if (tank != null && speed > 0) movementSpeeds.put(tank, speed);
+    }
+
     public boolean isBlocked(GridPoint2 cell) {
         return isBlocked(cell, null);
     }
 
     private boolean isBlocked(GridPoint2 cell, Tank moving) {
         for (Obstacle obstacle : obstacles) if (obstacle.getPosition().equals(cell)) return true;
-        if (player != moving && (player.getPosition().equals(cell) || player.getDestination().equals(cell))) return true;
+        if (!removedTanks.contains(player) && player.isAlive() && player != moving
+                && (player.getPosition().equals(cell) || player.getDestination().equals(cell))) return true;
         for (Enemy enemy : enemies) {
-            if (enemy != moving && (enemy.getPosition().equals(cell) || enemy.getDestination().equals(cell))) return true;
+            if (!removedTanks.contains(enemy) && enemy.isAlive() && enemy != moving
+                    && (enemy.getPosition().equals(cell) || enemy.getDestination().equals(cell))) return true;
         }
         return false;
     }
@@ -230,6 +266,8 @@ public class GameWorld {
     }
 
     public boolean updateMovement(Tank tank, float deltaTime, float movementSpeed) {
+        if (tank == null || removedTanks.contains(tank) || !tank.isAlive()) return false;
+        movementSpeeds.put(tank, movementSpeed);
         boolean finished = tank.updateMovement(deltaTime, movementSpeed);
         if (finished) {
             finishMovement(tank);

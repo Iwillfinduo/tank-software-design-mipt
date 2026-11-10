@@ -2,6 +2,8 @@ package ru.mipt.bit.platformer.domain.entities;
 
 import com.badlogic.gdx.math.GridPoint2;
 import ru.mipt.bit.platformer.util.GdxGameUtils;
+import ru.mipt.bit.platformer.util.Direction;
+import static com.badlogic.gdx.math.MathUtils.isEqual;
 
 public abstract class Tank implements Entity {
     private static final int MAX_HEALTH = 100;
@@ -43,5 +45,18 @@ public abstract class Tank implements Entity {
     public void takeDamage(int damage) {
         if (damage < 0) throw new IllegalArgumentException("Damage must not be negative");
         health = Math.max(0, health - damage);
+    }
+
+    /** Creates a projectile; the world is responsible for registering it. */
+    public Bullet shoot(Direction direction) {
+        return isAlive() && direction != null ? new Bullet(this, direction) : null;
+    }
+
+    public Bullet shoot() {
+        Direction direction = Direction.RIGHT;
+        if (isEqual(rotation, Direction.UP.getRotation())) direction = Direction.UP;
+        else if (isEqual(rotation, Direction.LEFT.getRotation())) direction = Direction.LEFT;
+        else if (isEqual(rotation, Direction.DOWN.getRotation())) direction = Direction.DOWN;
+        return shoot(direction);
     }
 }
