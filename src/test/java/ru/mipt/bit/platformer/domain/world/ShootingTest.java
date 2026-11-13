@@ -72,6 +72,11 @@ class ShootingTest {
         assertNotNull(world.shoot(player, Direction.RIGHT));
         world.updateBullets(.2f);
 
+        assertEquals(100, enemy.getHealth());
+        assertEquals(1, world.getBullets().size());
+
+        world.updateBullets(0f);
+
         assertEquals(75, enemy.getHealth());
         assertTrue(world.getBullets().isEmpty());
     }

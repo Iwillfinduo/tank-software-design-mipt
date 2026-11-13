@@ -49,6 +49,7 @@ import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
+/** Composition root adapter wiring domain ports to LibGDX infrastructure. */
 public class PlatformerGame implements ApplicationListener {
 
     private Batch batch;
@@ -108,7 +109,7 @@ public class PlatformerGame implements ApplicationListener {
                     new RandomDirectionStrategy(),
                     0.4f,
                     1.0f,
-                    enemyDelayRandom.nextFloat() * 1.0f
+                    enemyDelayRandom.nextFloat()
             ));
             controllers.add(new EnemyShootController(world, enemy, enemyDelayRandom, 0.15f));
         }

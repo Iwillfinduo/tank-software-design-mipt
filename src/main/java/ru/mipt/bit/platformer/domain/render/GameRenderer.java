@@ -12,6 +12,7 @@ import ru.mipt.bit.platformer.domain.entities.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
+/** LibGDX output adapter and observer of the world's entity lifecycle. */
 public class GameRenderer implements WorldObserver, HealthBarVisibility {
 
     private final MapRenderer levelRenderer;

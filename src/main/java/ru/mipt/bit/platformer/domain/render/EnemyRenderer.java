@@ -9,6 +9,7 @@ import ru.mipt.bit.platformer.domain.entities.Enemy;
 import ru.mipt.bit.platformer.util.TileMovement;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.*;
 
+/** LibGDX output adapter for enemy entities. */
 public final class EnemyRenderer implements EntityRenderer<Enemy> {
     private final Texture texture = new Texture("images/tank_red.png");
     private final TextureRegion graphics = new TextureRegion(texture);

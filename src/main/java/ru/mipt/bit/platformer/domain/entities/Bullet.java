@@ -13,6 +13,8 @@ public final class Bullet implements Entity {
     private final Direction direction;
     private final float speed;
     private final int damage;
+    private final GridPoint2 initialCell;
+    private boolean initialFrame = true;
     private boolean alive = true;
     private final List<GridPoint2> traversedCells = new ArrayList<>();
 
@@ -31,6 +33,7 @@ public final class Bullet implements Entity {
         float tankY = owner.getPosition().y;
         GridPoint2 offset = direction.move(new GridPoint2(0, 0));
         this.position = new Vector2(tankX + offset.x, tankY + offset.y);
+        this.initialCell = new GridPoint2(Math.round(position.x), Math.round(position.y));
         traversedCells.add(getPosition());
     }
 
@@ -40,6 +43,10 @@ public final class Bullet implements Entity {
     public float getSpeed() { return speed; }
     public int getDamage() { return damage; }
     public boolean isAlive() { return alive; }
+    /** The first simulation frame is rendered before the muzzle cell can collide. */
+    public boolean isInitialFrame() { return initialFrame; }
+    public void finishInitialFrame() { initialFrame = false; }
+    public GridPoint2 getInitialCell() { return new GridPoint2(initialCell); }
     public void remove() { alive = false; }
 
     public void update(float deltaTime) {
@@ -48,6 +55,7 @@ public final class Bullet implements Entity {
         position.x += direction.move(new GridPoint2(0, 0)).x * speed * deltaTime;
         position.y += direction.move(new GridPoint2(0, 0)).y * speed * deltaTime;
         traversedCells.clear();
+        traversedCells.add(start);
         int distance = Math.max(Math.abs(getPosition().x - start.x), Math.abs(getPosition().y - start.y));
         for (int i = 1; i <= distance; i++) {
             float fraction = (float) i / distance;
@@ -55,7 +63,6 @@ public final class Bullet implements Entity {
                     Math.round(start.x + (getPosition().x - start.x) * fraction),
                     Math.round(start.y + (getPosition().y - start.y) * fraction)));
         }
-        if (traversedCells.isEmpty()) traversedCells.add(getPosition());
     }
 
     public List<GridPoint2> getTraversedCells() { return List.copyOf(traversedCells); }

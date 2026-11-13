@@ -51,7 +51,7 @@ public final class PlayerShootController implements Controller {
         boolean pressed = input.isPressed(key);
         if (pressed && !wasPressed && cooldownRemaining == 0f) {
             commands.add(new ShootCommand(world, player));
-            cooldownRemaining = cooldown;
+            cooldownRemaining = cooldown * player.getFireCooldownMultiplier();
         }
         wasPressed = pressed;
     }

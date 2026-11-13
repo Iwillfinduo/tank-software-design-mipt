@@ -3,6 +3,10 @@ package ru.mipt.bit.platformer.domain.entities;
 import com.badlogic.gdx.math.GridPoint2;
 import ru.mipt.bit.platformer.util.GdxGameUtils;
 import ru.mipt.bit.platformer.util.Direction;
+import ru.mipt.bit.platformer.domain.entities.states.HeavyTankState;
+import ru.mipt.bit.platformer.domain.entities.states.LightTankState;
+import ru.mipt.bit.platformer.domain.entities.states.MediumTankState;
+import ru.mipt.bit.platformer.domain.entities.states.TankState;
 import static com.badlogic.gdx.math.MathUtils.isEqual;
 
 public abstract class Tank implements Entity {
@@ -12,6 +16,7 @@ public abstract class Tank implements Entity {
     private float movementProgress = 1f;
     private float rotation;
     private int health = MAX_HEALTH;
+    private TankState state = new LightTankState();
 
     protected Tank(int x, int y) {
         position = new GridPoint2(x, y);
@@ -35,21 +40,27 @@ public abstract class Tank implements Entity {
         movementProgress = GdxGameUtils.continueProgress(
                 movementProgress,
                 deltaTime,
-                movementSpeed
+                movementSpeed / state.movementSpeedMultiplier()
         );
         return movementProgress == 1f;
     }
     public int getHealth() { return health; }
     public int getMaxHealth() { return MAX_HEALTH; }
+    /** Returns the current State-pattern object controlling tank behaviour. */
+    public TankState getState() { return state; }
+    public float getMovementSpeedMultiplier() { return state.movementSpeedMultiplier(); }
+    public boolean canShoot() { return state.canShoot() && isAlive(); }
+    public float getFireCooldownMultiplier() { return state.fireCooldownMultiplier(); }
     public boolean isAlive() { return health > 0; }
     public void takeDamage(int damage) {
         if (damage < 0) throw new IllegalArgumentException("Damage must not be negative");
         health = Math.max(0, health - damage);
+        updateState();
     }
 
     /** Creates a projectile; the world is responsible for registering it. */
     public Bullet shoot(Direction direction) {
-        return isAlive() && direction != null ? new Bullet(this, direction) : null;
+        return canShoot() && direction != null ? new Bullet(this, direction) : null;
     }
 
     public Bullet shoot() {
@@ -58,5 +69,16 @@ public abstract class Tank implements Entity {
         else if (isEqual(rotation, Direction.LEFT.getRotation())) direction = Direction.LEFT;
         else if (isEqual(rotation, Direction.DOWN.getRotation())) direction = Direction.DOWN;
         return shoot(direction);
+    }
+
+    private void updateState() {
+        float healthRatio = (float) health / MAX_HEALTH;
+        if (healthRatio > 0.70f) {
+            state = new LightTankState();
+        } else if (healthRatio >= 0.15f) {
+            state = new MediumTankState();
+        } else {
+            state = new HeavyTankState();
+        }
     }
 }

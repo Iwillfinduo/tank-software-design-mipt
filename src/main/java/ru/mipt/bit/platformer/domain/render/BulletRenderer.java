@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import ru.mipt.bit.platformer.domain.entities.Bullet;
 import ru.mipt.bit.platformer.util.TileMovement;
 
+/** LibGDX output adapter for bullet entities. */
 public final class BulletRenderer implements EntityRenderer<Bullet> {
     private static final float TEXTURE_ROTATION_OFFSET = -90f;
 

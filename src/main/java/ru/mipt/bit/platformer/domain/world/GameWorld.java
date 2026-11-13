@@ -143,6 +143,7 @@ public class GameWorld {
                 handleBulletCollision(bullet, cell);
                 if (!bullet.isAlive()) break;
             }
+            bullet.finishInitialFrame();
             if (!bullet.isAlive()) {
                 iterator.remove();
                 removed(bullet);
@@ -169,6 +170,7 @@ public class GameWorld {
 
     private void handleBulletCollision(Bullet bullet, GridPoint2 cell) {
         if (!bullet.isAlive()) return;
+        if (bullet.isInitialFrame() && cell.equals(bullet.getInitialCell())) return;
         if (!isInside(cell) || isObstacle(cell)) {
             bullet.remove();
             return;

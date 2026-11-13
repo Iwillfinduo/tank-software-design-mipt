@@ -9,6 +9,7 @@ import ru.mipt.bit.platformer.domain.entities.Obstacle;
 
 import static ru.mipt.bit.platformer.util.GdxGameUtils.*;
 
+/** LibGDX output adapter for obstacle entities. */
 public class ObstacleRenderer implements EntityRenderer<Obstacle> {
 
     private final Texture texture;
