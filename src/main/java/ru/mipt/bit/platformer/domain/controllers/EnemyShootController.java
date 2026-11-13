@@ -15,7 +15,12 @@ public final class EnemyShootController implements Controller {
         this.world = world; this.enemy = enemy; this.random = random; this.chancePerSecond = chancePerSecond;
     }
     @Override public void update(float deltaTime) {
+        java.util.List<Command> commands = new java.util.ArrayList<>();
+        collectCommands(deltaTime, commands);
+        commands.forEach(Command::execute);
+    }
+    @Override public void collectCommands(float deltaTime, java.util.Collection<Command> commands) {
         if (enemy.isAlive() && random.nextFloat() < chancePerSecond * deltaTime)
-            new ShootCommand(world, enemy).execute();
+            commands.add(new ShootCommand(world, enemy));
     }
 }

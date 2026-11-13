@@ -25,13 +25,31 @@ class EnemyMovementTest {
     void bothCellsAreReservedUntilMovementFinishes() {
         Enemy first = new Enemy(1, 1);
         Enemy second = new Enemy(3, 1);
-        GameWorld world = new GameWorld(new Player(0, 0), List.of(), List.of(first, second), 5, 3);
+        Enemy third = new Enemy(0, 1);
+        GameWorld world = new GameWorld(new Player(0, 0), List.of(), List.of(first, second, third), 5, 3);
         new MoveCommand(world, first, Direction.RIGHT).execute();
         assertTrue(first.isMoving());
         assertFalse(world.startMovement(second, Direction.LEFT));
+        assertFalse(world.startMovement(third, Direction.RIGHT));
         first.setMovementProgress(1f);
         world.finishMovement(first);
         assertTrue(world.startMovement(second, Direction.RIGHT));
+    }
+
+    @Test
+    void completedMovementReleasesBothReservedCells() {
+        Enemy first = new Enemy(1, 1);
+        Enemy third = new Enemy(0, 1);
+        GameWorld world = new GameWorld(new Player(4, 0), List.of(), List.of(first, third), 5, 3);
+
+        new MoveCommand(world, first, Direction.RIGHT).execute();
+        assertFalse(world.startMovement(third, Direction.RIGHT));
+
+        world.updateMovement(first, 1f, 1f);
+
+        assertEquals(new com.badlogic.gdx.math.GridPoint2(2, 1), first.getPosition());
+        assertTrue(world.startMovement(third, Direction.RIGHT));
+        assertEquals(new com.badlogic.gdx.math.GridPoint2(1, 1), third.getDestination());
     }
 
     @Test

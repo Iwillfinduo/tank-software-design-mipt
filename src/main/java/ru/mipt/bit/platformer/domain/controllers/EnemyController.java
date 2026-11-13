@@ -3,8 +3,6 @@ package ru.mipt.bit.platformer.domain.controllers;
 import ru.mipt.bit.platformer.domain.controllers.strategies.DirectionStrategy;
 import ru.mipt.bit.platformer.domain.entities.Enemy;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
-import static com.badlogic.gdx.math.MathUtils.isEqual;
-import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 public final class EnemyController implements Controller {
     private final Enemy enemy;
@@ -13,6 +11,7 @@ public final class EnemyController implements Controller {
     private final float speed;
     private final float moveDelay;
     private float delayRemaining;
+    private boolean wasMoving;
 
     public EnemyController(Enemy enemy, GameWorld world, DirectionStrategy strategy, float speed) {
         this(enemy, world, strategy, speed, 0f, 0f);
@@ -51,19 +50,23 @@ public final class EnemyController implements Controller {
     }
 
     @Override public void update(float deltaTime) {
+        java.util.List<Command> commands = new java.util.ArrayList<>();
+        collectCommands(deltaTime, commands);
+        commands.forEach(Command::execute);
+        world.liveTick(deltaTime);
+    }
+
+    @Override public void collectCommands(float deltaTime, java.util.Collection<Command> commands) {
+        world.registerMovementSpeed(enemy, speed);
+        if (wasMoving && !enemy.isMoving()) {
+            delayRemaining = moveDelay;
+        }
+        wasMoving = enemy.isMoving();
         if (delayRemaining > 0f) {
             delayRemaining = Math.max(0f, delayRemaining - deltaTime);
             return;
         }
 
-        if (!enemy.isMoving()) new MoveCommand(world, enemy, strategy.chooseDirection()).execute();
-        if (enemy.isMoving()) {
-            float progress = continueProgress(enemy.getMovementProgress(), deltaTime, speed);
-            enemy.setMovementProgress(progress);
-            if (isEqual(progress, 1f)) {
-                world.finishMovement(enemy);
-                delayRemaining = moveDelay;
-            }
-        }
+        if (!enemy.isMoving()) commands.add(new MoveCommand(world, enemy, strategy.chooseDirection()));
     }
 }

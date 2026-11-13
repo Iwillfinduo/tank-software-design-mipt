@@ -3,11 +3,11 @@ package ru.mipt.bit.platformer.domain.render;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import ru.mipt.bit.platformer.domain.entities.Bullet;
 import ru.mipt.bit.platformer.util.TileMovement;
 
+/** LibGDX output adapter for bullet entities. */
 public final class BulletRenderer implements EntityRenderer<Bullet> {
     private static final float TEXTURE_ROTATION_OFFSET = -90f;
 
@@ -16,15 +16,15 @@ public final class BulletRenderer implements EntityRenderer<Bullet> {
     private final TileMovement movement;
     private final Rectangle rectangle = new Rectangle();
 
-    public BulletRenderer(TiledMapTileLayer layer, TileMovement movement) {
+    public BulletRenderer(TileMovement movement) {
         this.movement = movement;
         texture = new Texture("images/bullet.png");
         graphics = new TextureRegion(texture);
     }
 
     @Override public void render(Batch batch, Bullet bullet) {
-        float centerX = bullet.getWorldPosition().x * movement.getTileWidth();
-        float centerY = bullet.getWorldPosition().y * movement.getTileHeight();
+        float centerX = (bullet.getWorldPosition().x + 0.5f) * movement.getTileWidth();
+        float centerY = (bullet.getWorldPosition().y + 0.5f) * movement.getTileHeight();
         rectangle.set(
                 centerX - texture.getWidth() / 2f,
                 centerY - texture.getHeight() / 2f,

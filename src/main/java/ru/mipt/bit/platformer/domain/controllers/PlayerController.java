@@ -10,8 +10,6 @@ import ru.mipt.bit.platformer.util.Direction;
 import java.util.List;
 import java.util.Objects;
 
-import static com.badlogic.gdx.math.MathUtils.isEqual;
-import static ru.mipt.bit.platformer.util.GdxGameUtils.continueProgress;
 
 public class PlayerController implements Controller {
 
@@ -62,18 +60,30 @@ public class PlayerController implements Controller {
 
     @Override
     public void update(float deltaTime) {
-        Direction direction = inputHandler.handle();
-
-        if (!player.isMoving() && direction != null) {
-            startMovement(direction);
+        java.util.List<Command> commands = new java.util.ArrayList<>();
+        collectCommands(deltaTime, commands);
+        commands.forEach(Command::execute);
+        if (world != null) {
+            world.liveTick(deltaTime);
+        } else if (player.isAlive()
+                && player.updateMovement(deltaTime, movementSpeed)) {
+            player.reachDestination();
         }
+    }
 
-        updateMovement(deltaTime);
+    @Override
+    public void collectCommands(float deltaTime, java.util.Collection<Command> commands) {
+        Direction direction = inputHandler.handle();
+        if (!player.isMoving() && direction != null) {
+            if (world != null) commands.add(new MoveCommand(world, player, direction));
+            else commands.add(() -> startMovement(direction));
+        }
+        if (world != null) world.registerMovementSpeed(player, movementSpeed);
     }
 
     private void startMovement(Direction direction) {
         if (world != null) {
-            new MoveCommand(world, player, direction).execute();
+            world.startMovement(player, direction);
             return;
         }
         GridPoint2 destination = direction.move(player.getPosition());
@@ -85,24 +95,4 @@ public class PlayerController implements Controller {
         player.setMovementProgress(0f);
     }
 
-    private void updateMovement(float deltaTime) {
-        float progress = player.getMovementProgress();
-
-        if (isEqual(progress, 1f)) {
-            return;
-        }
-
-        progress = continueProgress(
-                progress,
-                deltaTime,
-                movementSpeed
-        );
-
-        player.setMovementProgress(progress);
-
-        if (isEqual(progress, 1f)) {
-            if (world != null) world.finishMovement(player);
-            else player.reachDestination();
-        }
-    }
 }

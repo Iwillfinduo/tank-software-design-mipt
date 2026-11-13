@@ -30,6 +30,7 @@ import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
 import ru.mipt.bit.platformer.domain.render.BulletRenderer;
 import ru.mipt.bit.platformer.domain.render.HealthBarRendererDecorator;
+import ru.mipt.bit.platformer.domain.render.HealthBarVisibilityState;
 import ru.mipt.bit.platformer.domain.entities.Player;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.domain.world.FileGameWorldLoader;
@@ -49,13 +50,14 @@ import static com.badlogic.gdx.graphics.GL20.GL_COLOR_BUFFER_BIT;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createSingleLayerMapRenderer;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.getSingleLayer;
 
+/** Composition root adapter wiring domain ports to LibGDX infrastructure. */
 public class PlatformerGame implements ApplicationListener {
 
     private Batch batch;
     private TiledMap level;
 
     private GameWorld world;
-    private Controller gameController;
+    private CompositeController gameController;
     private GameRenderer gameRenderer;
     private final GameWorldLoader worldLoader;
 
@@ -108,7 +110,7 @@ public class PlatformerGame implements ApplicationListener {
                     new RandomDirectionStrategy(),
                     0.4f,
                     1.0f,
-                    enemyDelayRandom.nextFloat() * 1.0f
+                    enemyDelayRandom.nextFloat()
             ));
             controllers.add(new EnemyShootController(world, enemy, enemyDelayRandom, 0.15f));
         }
@@ -117,11 +119,12 @@ public class PlatformerGame implements ApplicationListener {
 
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
         EnemyRenderer baseEnemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
-        BulletRenderer bulletRenderer = new BulletRenderer(groundLayer, tileMovement);
+        BulletRenderer bulletRenderer = new BulletRenderer(tileMovement);
+        HealthBarVisibilityState healthBarVisibility = new HealthBarVisibilityState();
         HealthBarRendererDecorator<Player> playerRenderer =
-                new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement);
+                new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement, healthBarVisibility);
         HealthBarRendererDecorator<ru.mipt.bit.platformer.domain.entities.Enemy> enemyRenderer =
-                new HealthBarRendererDecorator<>(baseEnemyRenderer, tileMovement);
+                new HealthBarRendererDecorator<>(baseEnemyRenderer, tileMovement, healthBarVisibility);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
@@ -129,7 +132,7 @@ public class PlatformerGame implements ApplicationListener {
                 playerRenderer,
                 obstacleRenderer, enemyRenderer, bulletRenderer, world
         );
-        controllers.add(new HealthBarsToggleController(keyInput, Input.Keys.L, gameRenderer));
+        controllers.add(new HealthBarsToggleController(keyInput, Input.Keys.L, healthBarVisibility));
         gameController = new CompositeController(controllers);
     }
 
@@ -165,10 +168,13 @@ public class PlatformerGame implements ApplicationListener {
 
         float deltaTime = Gdx.graphics.getDeltaTime();
 
-        gameController.update(deltaTime);
+        // Frame phases: collect input, execute commands, advance the model, render.
+        List<ru.mipt.bit.platformer.domain.controllers.Command> commands =
+                gameController.collectCommands(deltaTime);
+        gameController.executeCommands(commands);
         world.liveTick(deltaTime);
 
-        gameRenderer.render(world);
+        gameRenderer.render();
     }
 
     @Override

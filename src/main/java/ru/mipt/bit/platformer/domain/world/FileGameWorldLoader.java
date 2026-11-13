@@ -4,6 +4,7 @@ import ru.mipt.bit.platformer.util.ResourceReader;
 
 import java.util.Objects;
 
+/** Resource-file adapter implementing the {@link GameWorldLoader} input port. */
 public final class FileGameWorldLoader implements GameWorldLoader {
 
     private final ResourceReader resourceReader;

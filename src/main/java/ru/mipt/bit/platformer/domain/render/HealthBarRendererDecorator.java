@@ -9,7 +9,7 @@ import ru.mipt.bit.platformer.domain.entities.Tank;
 import ru.mipt.bit.platformer.util.TileMovement;
 
 public final class HealthBarRendererDecorator<T extends Tank>
-        implements EntityRenderer<T>, HealthBarVisibility {
+        implements EntityRenderer<T> {
 
     private static final float BAR_WIDTH = 56f;
     private static final float BAR_HEIGHT = 7f;
@@ -19,11 +19,16 @@ public final class HealthBarRendererDecorator<T extends Tank>
     private final TileMovement tileMovement;
     private final Texture pixel;
     private final Rectangle position = new Rectangle();
-    private boolean visible;
+    private final HealthBarVisibility visibility;
 
-    public HealthBarRendererDecorator(EntityRenderer<T> delegate, TileMovement tileMovement) {
+    public HealthBarRendererDecorator(
+            EntityRenderer<T> delegate,
+            TileMovement tileMovement,
+            HealthBarVisibility visibility
+    ) {
         this.delegate = delegate;
         this.tileMovement = tileMovement;
+        this.visibility = visibility;
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
         pixmap.fill();
@@ -34,7 +39,7 @@ public final class HealthBarRendererDecorator<T extends Tank>
     @Override
     public void render(Batch batch, T tank) {
         delegate.render(batch, tank);
-        if (!visible || !tank.isAlive()) return;
+        if (!visibility.areHealthBarsVisible() || !tank.isAlive()) return;
 
         tileMovement.moveRectangleBetweenTileCenters(
                 position,
@@ -47,13 +52,17 @@ public final class HealthBarRendererDecorator<T extends Tank>
         float bottom = position.y + BAR_OFFSET_Y;
         float healthRatio = (float) tank.getHealth() / tank.getMaxHealth();
 
-        batch.setColor(Color.DARK_GRAY);
-        batch.draw(pixel, left, bottom, BAR_WIDTH, BAR_HEIGHT);
-        batch.setColor(tank.getHealth() > tank.getMaxHealth() / 3
-                ? Color.GREEN
-                : Color.RED);
-        batch.draw(pixel, left, bottom, BAR_WIDTH * healthRatio, BAR_HEIGHT);
-        batch.setColor(Color.WHITE);
+        Color originalColor = batch.getColor().cpy();
+        try {
+            batch.setColor(Color.DARK_GRAY);
+            batch.draw(pixel, left, bottom, BAR_WIDTH, BAR_HEIGHT);
+            batch.setColor(tank.getHealth() > tank.getMaxHealth() / 3
+                    ? Color.GREEN
+                    : Color.RED);
+            batch.draw(pixel, left, bottom, BAR_WIDTH * healthRatio, BAR_HEIGHT);
+        } finally {
+            batch.setColor(originalColor);
+        }
     }
 
     @Override
@@ -62,12 +71,7 @@ public final class HealthBarRendererDecorator<T extends Tank>
         pixel.dispose();
     }
 
-    @Override
-    public void toggleHealthBars() {
-        visible = !visible;
-    }
-
     public boolean areHealthBarsVisible() {
-        return visible;
+        return visibility.areHealthBarsVisible();
     }
 }

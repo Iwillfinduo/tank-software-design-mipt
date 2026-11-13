@@ -3,6 +3,7 @@ package ru.mipt.bit.platformer.domain.world;
 import java.util.Objects;
 import java.util.Random;
 
+/** Random-generation adapter implementing the {@link GameWorldLoader} input port. */
 public final class RandomGameWorldLoader implements GameWorldLoader {
 
     private final int width;

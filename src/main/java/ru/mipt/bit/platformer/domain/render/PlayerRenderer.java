@@ -11,6 +11,7 @@ import ru.mipt.bit.platformer.util.TileMovement;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.createBoundingRectangle;
 import static ru.mipt.bit.platformer.util.GdxGameUtils.drawTextureRegionUnscaled;
 
+/** LibGDX output adapter for player entities. */
 public class PlayerRenderer implements EntityRenderer<Player> {
 
 

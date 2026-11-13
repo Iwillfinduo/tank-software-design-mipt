@@ -12,7 +12,8 @@ import ru.mipt.bit.platformer.domain.entities.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GameRenderer implements WorldObserver, HealthBarVisibility {
+/** LibGDX output adapter and observer of the world's entity lifecycle. */
+public class GameRenderer implements WorldObserver {
 
     private final MapRenderer levelRenderer;
     private final Batch batch;
@@ -20,7 +21,7 @@ public class GameRenderer implements WorldObserver, HealthBarVisibility {
     private final EntityRenderer<Obstacle> obstacleRenderer;
     private final EntityRenderer<Enemy> enemyRenderer;
     private EntityRenderer<Bullet> bulletRenderer;
-    private final List<Bullet> bullets = new ArrayList<>();
+    private final List<Entity> entities = new ArrayList<>();
 
     public GameRenderer(
             MapRenderer levelRenderer,
@@ -58,23 +59,23 @@ public class GameRenderer implements WorldObserver, HealthBarVisibility {
     }
 
     @Override public void entityAdded(Entity entity) {
-        if (entity instanceof Bullet) bullets.add((Bullet) entity);
+        if (!entities.contains(entity)) entities.add(entity);
     }
     @Override public void entityRemoved(Entity entity) {
-        if (entity instanceof Bullet) bullets.remove(entity);
+        entities.remove(entity);
     }
 
-    public void render(GameWorld world) {
+    public void render() {
         levelRenderer.render();
         batch.begin();
-        playerRenderer.render(batch, world.getPlayer());
-        for (Obstacle obstacle : world.getObstacles()) {
-            obstacleRenderer.render(batch, obstacle);
+        for (Entity entity : List.copyOf(entities)) {
+            if (entity instanceof Player player && player.isAlive()) playerRenderer.render(batch, player);
+            else if (entity instanceof Obstacle obstacle) obstacleRenderer.render(batch, obstacle);
+            else if (entity instanceof Enemy enemy && enemy.isAlive() && enemyRenderer != null)
+                enemyRenderer.render(batch, enemy);
+            else if (entity instanceof Bullet bullet && bullet.isAlive() && bulletRenderer != null)
+                bulletRenderer.render(batch, bullet);
         }
-        if (enemyRenderer != null) {
-            for (Enemy enemy : world.getEnemies()) enemyRenderer.render(batch, enemy);
-        }
-        if (bulletRenderer != null) for (Bullet bullet : bullets) bulletRenderer.render(batch, bullet);
 
         batch.end();
     }
@@ -86,15 +87,4 @@ public class GameRenderer implements WorldObserver, HealthBarVisibility {
         if (bulletRenderer != null) bulletRenderer.dispose();
     }
 
-    @Override
-    public void toggleHealthBars() {
-        toggle(playerRenderer);
-        toggle(enemyRenderer);
-    }
-
-    private static <T> void toggle(EntityRenderer<T> renderer) {
-        if (renderer instanceof HealthBarVisibility healthBars) {
-            healthBars.toggleHealthBars();
-        }
-    }
 }

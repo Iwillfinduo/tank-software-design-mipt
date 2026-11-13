@@ -16,6 +16,16 @@ public final class CompositeController implements Controller {
 
     @Override
     public void update(float deltaTime) {
-        controllers.forEach(controller -> controller.update(deltaTime));
+        executeCommands(collectCommands(deltaTime));
+    }
+
+    public java.util.List<Command> collectCommands(float deltaTime) {
+        java.util.List<Command> commands = new java.util.ArrayList<>();
+        controllers.forEach(controller -> controller.collectCommands(deltaTime, commands));
+        return commands;
+    }
+
+    public void executeCommands(java.util.Collection<? extends Command> commands) {
+        commands.forEach(Command::execute);
     }
 }
