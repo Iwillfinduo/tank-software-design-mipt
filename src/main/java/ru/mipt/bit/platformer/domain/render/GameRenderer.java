@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** LibGDX output adapter and observer of the world's entity lifecycle. */
-public class GameRenderer implements WorldObserver, HealthBarVisibility {
+public class GameRenderer implements WorldObserver {
 
     private final MapRenderer levelRenderer;
     private final Batch batch;
@@ -87,15 +87,4 @@ public class GameRenderer implements WorldObserver, HealthBarVisibility {
         if (bulletRenderer != null) bulletRenderer.dispose();
     }
 
-    @Override
-    public void toggleHealthBars() {
-        toggle(playerRenderer);
-        toggle(enemyRenderer);
-    }
-
-    private static <T> void toggle(EntityRenderer<T> renderer) {
-        if (renderer instanceof HealthBarVisibility healthBars) {
-            healthBars.toggleHealthBars();
-        }
-    }
 }

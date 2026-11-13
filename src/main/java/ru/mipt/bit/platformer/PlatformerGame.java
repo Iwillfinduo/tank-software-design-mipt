@@ -30,6 +30,7 @@ import ru.mipt.bit.platformer.domain.render.ObstacleRenderer;
 import ru.mipt.bit.platformer.domain.render.PlayerRenderer;
 import ru.mipt.bit.platformer.domain.render.BulletRenderer;
 import ru.mipt.bit.platformer.domain.render.HealthBarRendererDecorator;
+import ru.mipt.bit.platformer.domain.render.HealthBarVisibilityState;
 import ru.mipt.bit.platformer.domain.entities.Player;
 import ru.mipt.bit.platformer.domain.world.GameWorld;
 import ru.mipt.bit.platformer.domain.world.FileGameWorldLoader;
@@ -119,10 +120,11 @@ public class PlatformerGame implements ApplicationListener {
         ObstacleRenderer obstacleRenderer = new ObstacleRenderer(groundLayer);
         EnemyRenderer baseEnemyRenderer = new EnemyRenderer(groundLayer, tileMovement);
         BulletRenderer bulletRenderer = new BulletRenderer(tileMovement);
+        HealthBarVisibilityState healthBarVisibility = new HealthBarVisibilityState();
         HealthBarRendererDecorator<Player> playerRenderer =
-                new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement);
+                new HealthBarRendererDecorator<>(basePlayerRenderer, tileMovement, healthBarVisibility);
         HealthBarRendererDecorator<ru.mipt.bit.platformer.domain.entities.Enemy> enemyRenderer =
-                new HealthBarRendererDecorator<>(baseEnemyRenderer, tileMovement);
+                new HealthBarRendererDecorator<>(baseEnemyRenderer, tileMovement, healthBarVisibility);
 
         gameRenderer = new GameRenderer(
                 levelRenderer,
@@ -130,7 +132,7 @@ public class PlatformerGame implements ApplicationListener {
                 playerRenderer,
                 obstacleRenderer, enemyRenderer, bulletRenderer, world
         );
-        controllers.add(new HealthBarsToggleController(keyInput, Input.Keys.L, gameRenderer));
+        controllers.add(new HealthBarsToggleController(keyInput, Input.Keys.L, healthBarVisibility));
         gameController = new CompositeController(controllers);
     }
 
